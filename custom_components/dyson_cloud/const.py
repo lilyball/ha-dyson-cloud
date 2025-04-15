@@ -1,3 +1,5 @@
+"""Constants for Dyson Cloud."""
+
 DOMAIN = "dyson_cloud"
 
 CONF_REGION = "region"

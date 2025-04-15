@@ -1,23 +1,15 @@
 """Support for Dyson cloud account."""
 
-import asyncio
 import logging
-from functools import partial
 
-from homeassistant.exceptions import ConfigEntryNotReady
-from libdyson.cloud.account import DysonAccountCN
-from libdyson.cloud.device_info import DysonDeviceInfo
-from libdyson.const import DEVICE_TYPE_360_EYE
-from libdyson.discovery import DysonDiscovery
-from libdyson.dyson_device import DysonDevice
-from libdyson.exceptions import DysonException, DysonNetworkError
-from homeassistant.config_entries import ConfigEntry, SOURCE_DISCOVERY
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import Entity
-from homeassistant.components.zeroconf import async_get_instance
-from libdyson.cloud import DysonAccount
 from custom_components.dyson_local import DOMAIN as DYSON_LOCAL_DOMAIN
+from libdyson.cloud import DysonAccount
+from libdyson.cloud.account import DysonAccountCN
+from libdyson.exceptions import DysonNetworkError
+
+from homeassistant.config_entries import SOURCE_DISCOVERY, ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_AUTH, CONF_REGION, DATA_ACCOUNT, DATA_DEVICES, DOMAIN
 
@@ -41,9 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         account = DysonAccount(entry.data[CONF_AUTH])
     try:
         devices = await hass.async_add_executor_job(account.devices)
-    except DysonNetworkError:
-        _LOGGER.error("Cannot connect to Dyson cloud service.")
-        raise ConfigEntryNotReady
+    except DysonNetworkError as err:
+        _LOGGER.error("Cannot connect to Dyson cloud service")
+        raise ConfigEntryNotReady from err
 
     for device in devices:
         hass.async_create_task(
